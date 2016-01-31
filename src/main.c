@@ -25,10 +25,48 @@ struct SourceStruct
 	long time;
 };
 
-int main(int argc, char **argv)
+void make_deamon()
+{
+	pid_t pid;
+
+	pid = fork();
+	if (pid == -1)
+	{
+		exit(EXIT_FAILURE);
+	}
+	else 
+	{
+		if (pid !=0)
+		{
+			exit(EXIT_SUCCESS);
+		}
+	}
+	if(setsid() == -1)
+	{
+		exit(EXIT_FAILURE);
+	}
+	if(chdir("/") == -1)
+	{
+		exit(EXIT_FAILURE);
+	}
+	int max_fds = sysconf(_SC_OPEN_MAX);
+	if (max_fds == -1)
+	{
+    		max_fds = 8192;
+	}
+	for (int i = 0; i< max_fds; i++)
+	{
+		close(i);
+	}
+	open("/dev/null",O_RDWR);
+	dup(0);
+	dup(0);
+
+}
+
+size_t read_conf(struct SourceStruct **list)
 {
 	FILE *stream;
-	int fd;
 	char buf[LINE_MAX];
 	char *conf;
 	char path[PATH_MAX];
@@ -36,21 +74,11 @@ int main(int argc, char **argv)
 
 	size_t source_col = 0;
 
-	struct MemoryStruct chunk;
-	
-	struct SourceStruct *list;
-	
-	(void)argc;
-	(void)argv;
-
-	chunk.memory = NULL;
-	chunk.size = 0;
-	
 	conf = getenv("HOME");
 	if (conf == NULL)
 	{
 		perror("getenv");
-		return EXIT_FAILURE;
+		exit (EXIT_FAILURE);
 	}
 	strcpy(path,conf);
 	strcat(path,"/.config/rssrd/destination");
@@ -59,7 +87,7 @@ int main(int argc, char **argv)
 	{
 		perror("fgets");
 		fprintf(stderr,"Cannot read config file\n");
-		return EXIT_FAILURE;
+		exit (EXIT_FAILURE);
 	}
 	fclose(stream);
 	if(dest_path[strlen(dest_path)-1] == '\n')
@@ -87,7 +115,7 @@ int main(int argc, char **argv)
 	if (!stream)
 	{
 		perror("fopen");
-		return EXIT_FAILURE;
+		exit (EXIT_FAILURE);
 	}
 	while(fgets(buf,LINE_MAX,stream)!=NULL)
 	{
@@ -96,11 +124,16 @@ int main(int argc, char **argv)
 	if(source_col == 0)
 	{
 		fprintf(stderr,"Cannot find sources\n");
-		return EXIT_FAILURE;
+		exit (EXIT_FAILURE);
 	}
 	rewind(stream);
 	
-	list = malloc(source_col * sizeof(*list));
+	*list = malloc(source_col * sizeof(struct SourceStruct));
+	if(*list == NULL)
+	{
+		perror("malloc");
+		exit(EXIT_FAILURE);
+	}
 	for(size_t i = 0; i<source_col;i++)
 	{
 		char *indexs;
@@ -108,59 +141,54 @@ int main(int argc, char **argv)
 		fgets(buf,LINE_MAX,stream);
 		if(buf[strlen(buf)-1] == '\n')
 		{
-			list[i].url=strndup(buf,strlen(buf)-1);
+			(*list)[i].url=strndup(buf,strlen(buf)-1);
 		}
 		else
 		{
-			list[i].url=strndup(buf,strlen(buf));
+			(*list)[i].url=strndup(buf,strlen(buf));
 		}
-		list[i].time=0;
-		indexs = strchr(list[i].url,'/');
+		(*list)[i].time=0;
+		indexs = strchr((*list)[i].url,'/');
 		indexs+=2;
 		indexe = strchr(indexs, '/');
-		list[i].fname=strndup(dest_path,strlen(dest_path));
-		list[i].fname = realloc(list[i].fname,strlen(list[i].fname)+indexe-indexs);
-		if(list[i].fname == NULL)
+		(*list)[i].fname=strndup(dest_path,strlen(dest_path));
+		(*list)[i].fname = realloc((*list)[i].fname,strlen((*list)[i].fname)+indexe-indexs);
+		if((*list)[i].fname == NULL)
 		{
 			perror("realloc");
-			return EXIT_FAILURE;
+			exit (EXIT_FAILURE);
 		}
-		list[i].fname=strncat(list[i].fname, indexs,indexe-indexs);
-		list[i].fname = realloc(list[i].fname, strlen(list[i].fname)+5);
-		if(list[i].fname == NULL)
+		(*list)[i].fname=strncat((*list)[i].fname, indexs,indexe-indexs);
+		(*list)[i].fname = realloc((*list)[i].fname, strlen((*list)[i].fname)+5);
+		if((*list)[i].fname == NULL)
 		{
 			perror("realloc");
-			return EXIT_FAILURE;
+			exit (EXIT_FAILURE);
 		}
-		list[i].fname=strcat(list[i].fname,".rss");
+		(*list)[i].fname=strcat((*list)[i].fname,".rss");
 	}
 	fclose(stream);
-	
-	pid_t pid;
+	return source_col;
 
-	pid = fork();
-	if (pid == -1)
-	{
-		return -1;
-	}
-	else 
-	{
-		if (pid !=0)
-		{
-			exit(EXIT_SUCCESS);
-		}
-	}
-	if(setsid() == -1)
-	{
-		return -1;
-	}
-	if(chdir("/") == -1)
-	{
-		return -1;
-	}
-	open("/dev/null",O_RDWR);
-	dup(0);
-	dup(0);
+}
+
+int main(int argc, char **argv)
+{
+	int fd;
+	
+	size_t source_col;
+
+	struct SourceStruct *list;
+	struct MemoryStruct chunk;
+	chunk.memory = NULL;
+	chunk.size = 0;
+	
+	(void)argc;
+	(void)argv;
+
+	source_col = read_conf(&list);
+	make_deamon();
+
 	while(1)
 	{
 		for(size_t i = 0; i<source_col; i++)
