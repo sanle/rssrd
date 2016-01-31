@@ -13,6 +13,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <linux/fs.h>
+
 #define TIMEOUT 10
 
 
@@ -91,7 +93,11 @@ int main(int argc, char **argv)
 	{
 		++source_col;
 	}
-	
+	if(source_col == 0)
+	{
+		fprintf(stderr,"Cannot find sources\n");
+		return EXIT_FAILURE;
+	}
 	rewind(stream);
 	
 	list = malloc(source_col * sizeof(*list));
@@ -129,6 +135,32 @@ int main(int argc, char **argv)
 		list[i].fname=strcat(list[i].fname,".rss");
 	}
 	fclose(stream);
+	
+	pid_t pid;
+
+	pid = fork();
+	if (pid == -1)
+	{
+		return -1;
+	}
+	else 
+	{
+		if (pid !=0)
+		{
+			exit(EXIT_SUCCESS);
+		}
+	}
+	if(setsid() == -1)
+	{
+		return -1;
+	}
+	if(chdir("/") == -1)
+	{
+		return -1;
+	}
+	open("/dev/null",O_RDWR);
+	dup(0);
+	dup(0);
 	while(1)
 	{
 		for(size_t i = 0; i<source_col; i++)
