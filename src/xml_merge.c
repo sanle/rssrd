@@ -52,13 +52,13 @@ void xml_merge(char *fname, void *new_data)
 	}
 	last_time = mktime(&tm);
 	mxmlIndexDelete(index);
-	if(mxmlFindElement(tree,tree,"pubDate",NULL,NULL,MXML_DESCEND) != NULL)
+	if(mxmlFindElement(new_tree,new_tree,"pubDate",NULL,NULL,MXML_DESCEND) != NULL)
 	{
-		index = mxmlIndexNew(tree,"pubDate",NULL);
+		index = mxmlIndexNew(new_tree,"pubDate",NULL);
 	}
 	else
 	{
-		index = mxmlIndexNew(tree,"updated",NULL);
+		index = mxmlIndexNew(new_tree,"updated",NULL);
 	}
 	while ((node = mxmlIndexEnum(index)) != NULL)
 	{
