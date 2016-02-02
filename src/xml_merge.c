@@ -15,6 +15,7 @@ void xml_merge(char *fname, void *new_data)
 	mxml_node_t *node, *last, *child;
 	mxml_index_t *index;
 	char time[33]="";
+	const char *timeformat;
 	struct tm tm;
 	time_t last_time,new_time;
 	bool skip_date_parsing = false;
@@ -27,10 +28,12 @@ void xml_merge(char *fname, void *new_data)
 	if(mxmlFindElement(tree,tree,"pubDate",NULL,NULL,MXML_DESCEND) != NULL)
 	{
 		index = mxmlIndexNew(tree,"pubDate",NULL);
+		timeformat ="%a, %d %b %Y %T %z";
 	}
 	else
 	{
 		index = mxmlIndexNew(tree,"updated",NULL);
+		timeformat ="%Y-%m-%dT%TZ";
 	}
 	if ((node = mxmlIndexEnum(index))!= NULL)
 	{
@@ -42,7 +45,7 @@ void xml_merge(char *fname, void *new_data)
 			strcat(time," ");
 			child = mxmlGetNextSibling(child);
 		}
-		strptime(time,"%a, %d %b %Y %T %z",&tm);
+		strptime(time,timeformat,&tm);
 		time[0]='\0';
 	}
 	else
@@ -55,10 +58,12 @@ void xml_merge(char *fname, void *new_data)
 	if(mxmlFindElement(new_tree,new_tree,"pubDate",NULL,NULL,MXML_DESCEND) != NULL)
 	{
 		index = mxmlIndexNew(new_tree,"pubDate",NULL);
+		timeformat ="%a, %d %b %Y %T %z";
 	}
 	else
 	{
 		index = mxmlIndexNew(new_tree,"updated",NULL);
+		timeformat ="%Y-%m-%dT%TZ";
 	}
 	while ((node = mxmlIndexEnum(index)) != NULL)
 	{
@@ -69,7 +74,7 @@ void xml_merge(char *fname, void *new_data)
 			strcat(time," ");
 			child = mxmlGetNextSibling(child);
 		}
-		strptime(time,"%a, %d %b %Y %T %z",&tm);
+		strptime(time,timeformat,&tm);
 		time[0]='\0';
 		new_time = mktime(&tm);
 		if(!skip_date_parsing && (difftime(last_time,new_time) < 0))
