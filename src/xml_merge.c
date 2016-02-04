@@ -8,7 +8,7 @@
 #define __USE_XOPEN
 #include <time.h>
 
-void xml_merge(char *fname, void *new_data)
+void xml_merge(const char *fname, void *new_data)
 {
 	FILE *fp;
 	mxml_node_t *tree, *new_tree;
@@ -25,6 +25,18 @@ void xml_merge(char *fname, void *new_data)
 	fclose(fp);
 
 	new_tree = mxmlLoadString(NULL, new_data, MXML_NO_CALLBACK);
+	if(tree == NULL && new_tree == NULL)
+	{
+		fprintf(stderr,"Do not have any data");
+		exit(EXIT_FAILURE);
+	}
+	if(tree == NULL)
+	{
+		fp = fopen(fname,"w");
+		mxmlSaveFile(new_tree,fp,MXML_NO_CALLBACK);
+		fclose(fp);
+		return;
+	}
 	if(mxmlFindElement(tree,tree,"pubDate",NULL,NULL,MXML_DESCEND) != NULL)
 	{
 		index = mxmlIndexNew(tree,"pubDate",NULL);
