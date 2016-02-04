@@ -139,6 +139,12 @@ size_t read_conf(struct SourceStruct **list)
 		char *indexs;
 		char *indexe;
 		fgets(buf,LINE_MAX,stream);
+		if (buf[0] == '#')
+		{
+			--source_col;
+			--i;
+			continue;
+		}
 		if(buf[strlen(buf)-1] == '\n')
 		{
 			(*list)[i].url=strndup(buf,strlen(buf)-1);
