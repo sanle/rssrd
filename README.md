@@ -3,7 +3,7 @@
 rssrd - RSS Reader Daemon
 
 ### Short Description ###
-Daemon fetches remote feeds to create their local mirrors in file system. Deamon supports RSS and Atom. 
+Daemon fetches remote feeds to create their local mirrors in file system. Daemon supports RSS and Atom. 
  
 ### Dependencies ###
 * Curl
@@ -21,6 +21,7 @@ Daemon fetches feed every 10 minutes.
 *~/.config/rssrd/sources*
 
 Contains list of feed URLs. One link per line.
+If the first symbol of the line is # it meant that line is comment.
 
 *~/.config/rssrd/destination*
 
