@@ -11,8 +11,8 @@ struct MemoryStruct
 
 size_t read_rss(char *ptr, size_t size, size_t nmeb, void *userdata);
 
-int get_data(char *str, struct MemoryStruct *mem);
+int get_data(const char *str, struct MemoryStruct *mem);
 
-long get_modify_time(char *str);
+long get_modify_time(const char *str);
 
 #endif

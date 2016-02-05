@@ -25,7 +25,7 @@ size_t read_rss(char *ptr, size_t size, size_t nmeb, void *userdata)
 	return realsize;
 }
 
-int get_data(char *str, struct MemoryStruct *mem)
+int get_data(const char *str, struct MemoryStruct *mem)
 {
 	CURL *curl;
 	CURLcode res;
@@ -37,6 +37,7 @@ int get_data(char *str, struct MemoryStruct *mem)
 		return -1;
 	}
 	curl_easy_setopt(curl, CURLOPT_URL,str);
+	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)mem);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, read_rss);
 	res = curl_easy_perform(curl);
@@ -51,7 +52,7 @@ int get_data(char *str, struct MemoryStruct *mem)
 	return 0;
 }
 
-long get_modify_time(char *str)
+long get_modify_time(const char *str)
 {
 	CURL *curl;
 	CURLcode res;
@@ -66,6 +67,7 @@ long get_modify_time(char *str)
 	}
 	curl_easy_setopt(curl, CURLOPT_URL,str);
 	curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
+	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 	curl_easy_setopt(curl, CURLOPT_FILETIME, 1L);
 
 	res = curl_easy_perform(curl);
