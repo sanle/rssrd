@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <time.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,7 +26,7 @@ struct SourceStruct
 	long time;
 };
 
-void make_deamon()
+void make_daemon()
 {
 	pid_t pid;
 
@@ -181,19 +182,35 @@ size_t read_conf(struct SourceStruct **list)
 int main(int argc, char **argv)
 {
 	int fd;
-	
+	int opt;
+
 	size_t source_col;
 
 	struct SourceStruct *list;
 	struct MemoryStruct chunk;
+
+	bool daemon = true;
+
+	while((opt = getopt(argc,argv,"n")) != -1)
+	{
+		switch (opt)
+		{
+			case 'n':
+				daemon = false;
+				break;
+			default:
+				fprintf(stderr,"Undefined option \n");
+		}
+	}
+
 	chunk.memory = NULL;
 	chunk.size = 0;
 	
-	(void)argc;
-	(void)argv;
-
 	source_col = read_conf(&list);
-	make_deamon();
+	if(daemon)
+	{
+		make_daemon();
+	}
 
 	while(1)
 	{
