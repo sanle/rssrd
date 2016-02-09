@@ -18,7 +18,7 @@ void xml_merge(const char *fname, void *new_data)
 	const char *timeformat;
 	struct tm tm;
 	time_t last_time,new_time;
-	bool skip_date_parsing = false;
+	bool is_new_data = false;
 
 	fp = fopen(fname,"r");
 	tree = mxmlLoadFile(NULL,fp,MXML_NO_CALLBACK);
@@ -49,7 +49,7 @@ void xml_merge(const char *fname, void *new_data)
 	}
 	if ((node = mxmlIndexEnum(index))!= NULL)
 	{
-		last=node;
+		last=mxmlGetParent(node);
 		child = mxmlGetFirstChild(node);
 		while(child != NULL)
 		{
@@ -89,29 +89,15 @@ void xml_merge(const char *fname, void *new_data)
 		strptime(time,timeformat,&tm);
 		time[0]='\0';
 		new_time = mktime(&tm);
-		if(!skip_date_parsing && (difftime(last_time,new_time) < 0))
+		if(difftime(last_time,new_time) < 0)
 		{
-			skip_date_parsing=true;
-		}
-		if(skip_date_parsing)
-		{
-			if(difftime(last_time,new_time) < 0)
-			{
-				mxmlAdd(mxmlGetParent(last), MXML_ADD_BEFORE, last, mxmlGetParent(node));
-				last = mxmlGetNextSibling(last);
-			}
-			else
-			{
-
-				mxmlAdd(mxmlGetParent(last), MXML_ADD_AFTER, last, mxmlGetParent(node));
-				last = mxmlGetPrevSibling(last);
-			}
-			last_time=new_time;
+			is_new_data = true;
+			mxmlAdd(mxmlGetParent(last), MXML_ADD_BEFORE, last, mxmlGetParent(node));
 		}
 
 	}
 	mxmlIndexDelete(index);
-	if(skip_date_parsing)
+	if(is_new_data)
 	{
 		fp = fopen(fname,"w");
 		mxmlSaveFile(tree,fp,MXML_NO_CALLBACK);
