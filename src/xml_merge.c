@@ -15,6 +15,7 @@ void xml_merge(const char *fname, void *new_data)
 	mxml_node_t *node, *last, *child;
 	mxml_index_t *index;
 	char time[33]="";
+	const char *item_node_name;
 	const char *timeformat;
 	struct tm tm;
 	time_t last_time,new_time;
@@ -41,13 +42,15 @@ void xml_merge(const char *fname, void *new_data)
 	{
 		index = mxmlIndexNew(tree,"pubDate",NULL);
 		timeformat ="%a, %d %b %Y %T %z";
+		item_node_name = "item";
 	}
 	else
 	{
 		index = mxmlIndexNew(tree,"updated",NULL);
 		timeformat ="%Y-%m-%dT%TZ";
+		item_node_name = "entry";
 	}
-	if ((node = mxmlIndexEnum(index))!= NULL)
+	while ((node = mxmlIndexEnum(index))!= NULL)
 	{
 		last=mxmlGetParent(node);
 		child = mxmlGetFirstChild(node);
@@ -59,10 +62,14 @@ void xml_merge(const char *fname, void *new_data)
 		}
 		strptime(time,timeformat,&tm);
 		time[0]='\0';
+		if(!strcmp(mxmlGetElement(last),item_node_name))
+		{
+			break;
+		}
 	}
-	else
+	if(strcmp(mxmlGetElement(last),item_node_name))
 	{
-		fprintf(stderr,"Do not find pubDate node\n");
+		fprintf(stderr,"Cannot find item node\n");
 		exit(EXIT_FAILURE);
 	}
 	last_time = mktime(&tm);
@@ -71,14 +78,21 @@ void xml_merge(const char *fname, void *new_data)
 	{
 		index = mxmlIndexNew(new_tree,"pubDate",NULL);
 		timeformat ="%a, %d %b %Y %T %z";
+		item_node_name = "item";
 	}
 	else
 	{
 		index = mxmlIndexNew(new_tree,"updated",NULL);
 		timeformat ="%Y-%m-%dT%TZ";
+		item_node_name = "entry";
 	}
 	while ((node = mxmlIndexEnum(index)) != NULL)
-	{
+	{	
+		if(strcmp(mxmlGetElement(mxmlGetParent(node)),item_node_name) != 0)
+		{
+			continue;
+		}
+
 		child = mxmlGetFirstChild(node);
 		while (child != NULL)
 		{
