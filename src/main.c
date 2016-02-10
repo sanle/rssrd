@@ -26,10 +26,10 @@ struct SourceStruct
 	long time;
 };
 
-void make_daemon()
+void make_daemon(const char* path)
 {
 	pid_t pid;
-
+	char fpath[PATH_MAX];
 	pid = fork();
 	if (pid == -1)
 	{
@@ -62,10 +62,13 @@ void make_daemon()
 	open("/dev/null",O_RDWR);
 	dup(0);
 	dup(0);
+	strcpy(fpath,path);
+	strcat(fpath,".error.log");
+	freopen(fpath,"w+",stderr);
 
 }
 
-size_t read_conf(struct SourceStruct **list)
+size_t read_conf(struct SourceStruct **list, char **d_path)
 {
 	FILE *stream;
 	char buf[LINE_MAX];
@@ -110,6 +113,9 @@ size_t read_conf(struct SourceStruct **list)
 		}
 
 	}
+
+	(*d_path) = strdup(dest_path);
+
 	strcpy(path,conf);
 	strcat(path,"/.config/rssrd/sources");
 	stream = fopen(path,"r");
@@ -191,6 +197,8 @@ int main(int argc, char **argv)
 
 	bool daemon = true;
 
+	char *dest_path;
+
 	while((opt = getopt(argc,argv,"n")) != -1)
 	{
 		switch (opt)
@@ -206,10 +214,10 @@ int main(int argc, char **argv)
 	chunk.memory = NULL;
 	chunk.size = 0;
 	
-	source_col = read_conf(&list);
+	source_col = read_conf(&list,&dest_path);
 	if(daemon)
 	{
-		make_daemon();
+		make_daemon(dest_path);
 	}
 
 	while(1)
