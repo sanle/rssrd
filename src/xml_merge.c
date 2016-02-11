@@ -60,6 +60,7 @@ void xml_merge(const char *fname, void *new_data)
 			strcat(time," ");
 			child = mxmlGetNextSibling(child);
 		}
+		memset(&tm,0,sizeof(struct tm));
 		strptime(time,timeformat,&tm);
 		time[0]='\0';
 		if(!strcmp(mxmlGetElement(last),item_node_name))
@@ -100,6 +101,7 @@ void xml_merge(const char *fname, void *new_data)
 			strcat(time," ");
 			child = mxmlGetNextSibling(child);
 		}
+		memset(&tm,0,sizeof(struct tm));
 		strptime(time,timeformat,&tm);
 		time[0]='\0';
 		new_time = mktime(&tm);
