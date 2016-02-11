@@ -16,6 +16,8 @@ Links to feed are read from config file (the file location ~/.config/rssrd/sourc
 New data is written into file named `domainname.rss`. Path to the file is read from config file (the file location ~/.config/rssrd/destination).
 Daemon fetches feed every 10 minutes.
 
+If -n parameter is passed, the program does not become daemon.
+
 ### Config Files ###
 
 *~/.config/rssrd/sources*
