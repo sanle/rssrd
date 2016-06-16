@@ -87,6 +87,12 @@ size_t read_conf(struct SourceStruct **list, char **d_path)
 	strcpy(path,conf);
 	strcat(path,"/.config/rssrd/destination");
 	stream = fopen(path,"r");
+	if (!stream)
+	{
+		perror("fopen");
+		fprintf(stderr,"Cannot find config file (destination)\n");
+		exit (EXIT_FAILURE);
+	}
 	if(fgets(dest_path,PATH_MAX,stream) == NULL)
 	{
 		perror("fgets");
@@ -122,6 +128,7 @@ size_t read_conf(struct SourceStruct **list, char **d_path)
 	if (!stream)
 	{
 		perror("fopen");
+		fprintf(stderr,"Cannot find config file (sources)\n");
 		exit (EXIT_FAILURE);
 	}
 	while(fgets(buf,LINE_MAX,stream)!=NULL)
